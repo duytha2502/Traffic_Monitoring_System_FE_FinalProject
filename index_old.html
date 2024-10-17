@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video for Tracking</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div>
+        <img src="img/banner.jpg" alt="">
+    </div>
+    <div class="container">
+        <h1>Upload Video for Object Tracking</h1>
+        
+        <!-- Upload Section -->
+        <div id="uploadSection">
+            <label for="videoFile">Choose a video (mp4):</label>
+            <input type="file" id="videoFile" accept="video/mp4">
+            <button onclick="uploadVideo()">Upload and Track</button>
+            <p id="loadingText" class="loading">Processing video, please wait...</p>
+        </div>
+
+        <!-- Result Section -->
+        <div id="resultSection" style="display: none;">
+            <h2>Processed Video</h2>
+            <video id="resultVideo" controls></video>
+        </div>
+
+        <!-- Stats Section -->
+        <div id="statsSection" style="display: none;">
+            <h2>Tracking Statistics</h2>
+            <div class="stats">
+                <div class="stat-item">
+                    <h3 id="objectCount">0</h3>
+                    <p>Objects Detected</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="processingTime">0s</h3>
+                    <p>Processing Time</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="fps">0 FPS</h3>
+                    <p>Frames per Second</p>
+                </div>
+            </div>
+            <div class="download-btn">
+                <button onclick="downloadStats()">Download Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function uploadVideo() {
+            try {
+                
+                const videoFile = document.getElementById("videoFile").files[0];
+                
+                if (!videoFile) {
+                    alert("Please select a video file!");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append("file", videoFile);
+
+                const response = await fetch('http://127.0.0.1:8000/track', {
+                method: 'POST',
+                body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.video_url) {
+                    // Tạo video element với thẻ source
+                    const videoElement = document.createElement("video");
+                    videoElement.controls = true;
+                    videoElement.width = 1280;
+                    videoElement.height = 720;
+
+                    const sourceElement = document.createElement("source");
+                    sourceElement.src = `http://127.0.0.1:8000/${data.video_url}`; // Gắn URL video
+                    sourceElement.type = "video/mp4";
+
+                    videoElement.appendChild(sourceElement);
+                    document.getElementById("result").innerHTML = ""; // Xóa kết quả cũ
+                    document.getElementById("result").appendChild(videoElement); // Thêm video mới
+                    videoElement.load(); // Tải video mới
+                }
+                else {
+                    alert(data.error || 'Error occurred');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+                // .then(response => {
+                //     if (!response.ok) {
+                //         throw new Error('Server responded with error: ' + response.statusText);
+                //     }
+                //     return response.json();
+                // })
+        //     .then(data => {
+        //         if (data.video_url) {
+        //             // Tạo video element với thẻ source
+        //             const videoElement = document.createElement("video");
+        //             videoElement.controls = true;
+        //             videoElement.width = 600;
+
+        //             const sourceElement = document.createElement("source");
+        //             sourceElement.src = data.video_url; // Gắn URL video
+        //             sourceElement.type = "video/mp4";
+
+        //             // videoElement.appendChild(sourceElement);
+        //             // document.getElementById("result").innerHTML = ""; // Xóa kết quả cũ
+        //             // document.getElementById("result").appendChild(videoElement); // Thêm video mới
+        //             // videoElement.load(); // Tải video mới
+        //         }
+        //         // else {
+        //         //     alert(data.error || 'Error occurred');
+        //         // }
+        //     })
+        //         .catch(error => {
+        //             console.error('Error:', error);
+        //             // alert('An error occurred. Please try again.');
+        //         });
+        }
+    
+    </script>
+</body>
+
+</html>
